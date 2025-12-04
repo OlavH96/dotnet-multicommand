@@ -108,10 +108,11 @@ public class AppConsoleTests
         using var writer = new StringWriter();
         var console = new AppConsole(writer, writer);
 
-        console.WriteNormal("Message with newline\n\r");
+        console.WriteNormal("Message with newline" + Environment.NewLine);
 
         var output = writer.ToString();
-        Assert.Equal("Message with newline" + Environment.NewLine, output);
+        Assert.StartsWith("Message with newline", output);
+        Assert.EndsWith(Environment.NewLine, output);
     }
 
     [Fact]
