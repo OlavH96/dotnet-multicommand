@@ -8,6 +8,7 @@ public class AppConsole(TextWriter stdOut, TextWriter stdErr)
 	private readonly TextWriter stdOut = stdOut;
 	private readonly TextWriter stdErr = stdErr;
 	public static AppConsole Default = new AppConsole(Console.Out, Console.Error);
+	public bool Verbose = false;
 
 	public void WriteError(string value)
 	{
@@ -44,6 +45,14 @@ public class AppConsole(TextWriter stdOut, TextWriter stdErr)
 
 	public void WriteNormal(string value)
 	{
+		stdOut.WriteLine(value.TrimEnd(Environment.NewLine.ToCharArray()));
+	}
+	public void WriteVerbose(string value)
+	{
+		if(!Verbose)
+		{
+			return;
+		}
 		stdOut.WriteLine(value.TrimEnd(Environment.NewLine.ToCharArray()));
 	}
 }

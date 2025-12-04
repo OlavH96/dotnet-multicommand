@@ -16,6 +16,7 @@ public class App(AppConsole _console)
 
 		var gitOnly = app.Option("-g | --git", "Only run command in git directories", CommandOptionType.NoValue);
 		var recursive = app.Option("-r | --recursive", "Recursively run commands in subdirectories", CommandOptionType.NoValue);
+		var verbose = app.Option("--verbose", "Enable verbose output", CommandOptionType.NoValue);
 
 		var versionOption = app.VersionOption("-v | --version", GetVersion());
 		var helpOption = app.HelpOption("-h | --help");
@@ -23,6 +24,7 @@ public class App(AppConsole _console)
 
 		app.OnExecuteAsync(async cancellationToken =>
 		{
+			_console.Verbose = verbose.HasValue();
 			if(app.RemainingArguments.Count == 0)
 			{
 				_console.WriteError("No command specified to run.");
@@ -31,15 +33,14 @@ public class App(AppConsole _console)
 			}
 
 			var commandToRun = string.Join(" ", app.RemainingArguments);
-			_console.WriteHighlighted($"Command line: dotnet multi-command {commandToRun}");
 
 			var worker = new MultiCommandRunner(_console)
-			.WithCommand(commandToRun)
-			.WithGitOnly(gitOnly.HasValue())
-			.WithRecursive(recursive.HasValue())
+				.WithCommand(commandToRun)
+				.WithGitOnly(gitOnly.HasValue())
+				.WithRecursive(recursive.HasValue())
 			;
 			await worker.Run();
-			return true ? 0xbad : 0;
+			return 0;
 		});
 
 		return app.Execute(args);
