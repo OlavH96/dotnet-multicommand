@@ -14,13 +14,13 @@ A .NET global tool for running commands across multiple directories simultaneous
 Install as a global .NET tool:
 
 ```bash
-dotnet tool install --global Dotnet.MultiCommand
+dotnet tool install --global dotnet-multicommand
 ```
 
 Or install from a local package:
 
 ```bash
-dotnet tool install --global --add-source ./src/Dotnet.MultiCommand/nupkg Dotnet.MultiCommand
+dotnet tool install --global --add-source ./src/Dotnet.MultiCommand/nupkg dotnet-multicommand
 ```
 
 ## Usage
@@ -126,7 +126,7 @@ dotnet build
 dotnet pack src/Dotnet.MultiCommand/Dotnet.MultiCommand.csproj
 
 # Install locally
-dotnet tool install --global --add-source ./src/Dotnet.MultiCommand/nupkg Dotnet.MultiCommand
+dotnet tool install --global --add-source ./src/Dotnet.MultiCommand/nupkg dotnet-multicommand
 ```
 
 ## Requirements
