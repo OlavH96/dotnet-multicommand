@@ -4,5 +4,7 @@ public record Settings(
 	bool Recursive = false,
 	string Command = "ls",
 	string? FolderInclusionFilter = null,
-	string? FolderExclusionFilter = null
+	string? FolderExclusionFilter = null,
+	string? FileInclusionFilter = null,
+	string? FileExclusionFilter = null
 );

@@ -19,6 +19,8 @@ public class App(AppConsole _console)
 		var verbose = app.Option("--verbose", "Enable verbose output", CommandOptionType.NoValue);
 		var includeFolderFilter = app.Option<string>("-i | --include-folder <TEXT>", "Only run command in directories containing specified text", CommandOptionType.SingleValue);
 		var excludeFolderFilter = app.Option<string>("-e | --exclude-folder <TEXT>", "Do not run command in directories containing specified text", CommandOptionType.SingleValue);
+		var includeFileFilter = app.Option<string>("-if | --include-file <TEXT>", "Only run command in directories containing a file with specified text in the filename", CommandOptionType.SingleValue);
+		var excludeFileFilter = app.Option<string>("-ef | --exclude-file <TEXT>", "Do not run command in directories containing a file with specified text in the filename", CommandOptionType.SingleValue);
 
 		var versionOption = app.VersionOption("-v | --version", GetVersion());
 		var helpOption = app.HelpOption("-h | --help");
@@ -51,6 +53,8 @@ Examples:
 				.WithGitOnly(gitOnly.HasValue())
 				.WithFolderInclusionFilter(includeFolderFilter.HasValue() ? includeFolderFilter.ParsedValue : null)
 				.WithFolderExclusionFilter(excludeFolderFilter.HasValue() ? excludeFolderFilter.ParsedValue : null)
+				.WithFileInclusionFilter(includeFileFilter.HasValue() ? includeFileFilter.ParsedValue : null)
+				.WithFileExclusionFilter(excludeFileFilter.HasValue() ? excludeFileFilter.ParsedValue : null)
 				.WithRecursive(recursive.HasValue())
 			;
 			await worker.Run();

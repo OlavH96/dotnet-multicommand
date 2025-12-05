@@ -60,6 +60,20 @@ public class SettingsTests
     }
 
     [Fact]
+    public void Settings_WithFileFilters_UpdatesCorrectly()
+    {
+        var settings = new Settings();
+        var updated = settings with 
+        { 
+            FileInclusionFilter = "package.json",
+            FileExclusionFilter = ".lock"
+        };
+
+        Assert.Equal("package.json", updated.FileInclusionFilter);
+        Assert.Equal(".lock", updated.FileExclusionFilter);
+    }
+
+    [Fact]
     public void Settings_ToString_ContainsAllValues()
     {
         var settings = new Settings(
@@ -67,7 +81,9 @@ public class SettingsTests
             Recursive: true,
             Command: "git status",
             FolderInclusionFilter: "Test",
-            FolderExclusionFilter: "Example"
+            FolderExclusionFilter: "Example",
+            FileInclusionFilter: "package.json",
+            FileExclusionFilter: ".lock"
         );
 
         var result = settings.ToString();
@@ -77,5 +93,7 @@ public class SettingsTests
         Assert.Contains("git status", result);
         Assert.Contains("Test", result);
         Assert.Contains("Example", result);
+        Assert.Contains("package.json", result);
+        Assert.Contains(".lock", result);
     }
 }

@@ -54,6 +54,24 @@ public class MultiCommandRunner(AppConsole _console)
 			_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it does not contain filter text '{_settings.FolderInclusionFilter}'.");
 			return false;
 		}
+		if(_settings.FileExclusionFilter != null)
+		{
+			var files = Directory.GetFiles(workingDirectory);
+			if(files.Any(f => Path.GetFileName(f).Contains(_settings.FileExclusionFilter)))
+			{
+				_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it contains a file with exclusion text '{_settings.FileExclusionFilter}'.");
+				return false;
+			}
+		}
+		if(_settings.FileInclusionFilter != null)
+		{
+			var files = Directory.GetFiles(workingDirectory);
+			if(!files.Any(f => Path.GetFileName(f).Contains(_settings.FileInclusionFilter)))
+			{
+				_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it does not contain a file with filter text '{_settings.FileInclusionFilter}'.");
+				return false;
+			}
+		}
 		_console.WriteNormal($"Executing command: {_settings.Command} in directory: {workingDirectory}");
 		var baseCommand = _settings.Command.Split(' ')[0];
 		var rest = _settings.Command.Substring(baseCommand.Length).Trim();
@@ -91,6 +109,16 @@ public class MultiCommandRunner(AppConsole _console)
 	public MultiCommandRunner WithCommand(string command)
 	{
 		_settings = _settings with { Command = command };
+		return this;
+	}
+	public MultiCommandRunner WithFileInclusionFilter(string? fileContainsText)
+	{
+		_settings = _settings with { FileInclusionFilter = fileContainsText };
+		return this;
+	}
+	public MultiCommandRunner WithFileExclusionFilter(string? fileExcludesText)
+	{
+		_settings = _settings with { FileExclusionFilter = fileExcludesText };
 		return this;
 	}
 	
