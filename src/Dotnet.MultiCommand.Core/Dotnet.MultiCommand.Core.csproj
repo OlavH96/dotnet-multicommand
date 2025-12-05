@@ -4,6 +4,15 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Authors>Olav Reppe Husby</Authors>
+    <Description>A simple command line (.Net Global tool) to run commands in multiple folder</Description>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <PackageTags>dotnet;cli;csx;nuget;tool</PackageTags>
+    <PackageProjectUrl>https://github.com/OlavH96/dotnet-multicommand</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/OlavH96/dotnet-multicommand.git</RepositoryUrl>
+    <Version>0.0.4</Version>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CliWrap" Version="3.10.0" />

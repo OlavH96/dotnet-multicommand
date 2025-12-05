@@ -8,6 +8,17 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>mc</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
+    <IsPackable>true</IsPackable>
+    <PackageId>dotnet-multiocmmand</PackageId>
+    <Authors>Olav Reppe Husby</Authors>
+    <Description>A simple command line (.Net Global tool) to run commands in multiple folder</Description>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <PackageTags>dotnet;cli;csx;nuget;tool</PackageTags>
+    <PackageProjectUrl>https://github.com/OlavH96/dotnet-multicommand</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/OlavH96/dotnet-multicommand.git</RepositoryUrl>
+    <Version>0.0.4</Version>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Dotnet.MultiCommand.Core\Dotnet.MultiCommand.Core.csproj" />
