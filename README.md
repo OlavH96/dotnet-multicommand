@@ -1,3 +1,4 @@
+[![NuGet Version](https://img.shields.io/nuget/v/dotnet-multicommand)](https://www.nuget.org/packages/dotnet-multicommand/)
 # Dotnet.MultiCommand (mc)
 
 A .NET global tool for running commands across multiple directories simultaneously.
