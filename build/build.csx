@@ -22,7 +22,7 @@ Step Pack = () =>
 AsyncStep Deploy = async () =>
 {
     Pack();
-    await Artifacts.Deploy();
+    //await Artifacts.Deploy();
 };
 
 await StepRunner.Execute(Args);

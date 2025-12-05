@@ -9,7 +9,7 @@
     <ToolCommandName>mc</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <IsPackable>true</IsPackable>
-    <PackageId>dotnet-multiocmmand</PackageId>
+    <PackageId>dotnet-multicommand</PackageId>
     <Authors>Olav Reppe Husby</Authors>
     <Description>A simple command line (.Net Global tool) to run commands in multiple folder</Description>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
