@@ -19,11 +19,15 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/OlavH96/dotnet-multicommand.git</RepositoryUrl>
     <Version>0.0.4</Version>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Dotnet.MultiCommand.Core\Dotnet.MultiCommand.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="4.1.1" />
+  </ItemGroup>
+  <ItemGroup>
+        <None Include="../../README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 </Project>

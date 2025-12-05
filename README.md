@@ -155,3 +155,6 @@ dotnet-multicommand/
 
 - [McMaster.Extensions.CommandLineUtils](https://github.com/natemcmaster/CommandLineUtils) - Command-line parsing
 - [CliWrap](https://github.com/Tyrrrz/CliWrap) - Process execution wrapper
+
+## TODO
+- File inclusion / exclusion, folder contains/doesnt contain file with name before running command
