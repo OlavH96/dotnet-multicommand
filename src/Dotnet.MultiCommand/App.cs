@@ -46,7 +46,8 @@ Examples:
 				return 0xbad;
 			}
 
-			var commandToRun = string.Join(" ", app.RemainingArguments);
+			var commandToRun = string.Join(" ", app.RemainingArguments.Select(arg => 
+				arg.Contains(' ') ? $"\"{arg}\"" : arg));
 
 			var worker = new MultiCommandRunner(_console)
 				.WithCommand(commandToRun)

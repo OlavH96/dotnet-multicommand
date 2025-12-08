@@ -215,3 +215,6 @@ dotnet-multicommand/
 
 - [McMaster.Extensions.CommandLineUtils](https://github.com/natemcmaster/CommandLineUtils) - Command-line parsing
 - [CliWrap](https://github.com/Tyrrrz/CliWrap) - Process execution wrapper
+
+## todo
+- Allow strings in the command, like mc -r -g git coomit -m "message"

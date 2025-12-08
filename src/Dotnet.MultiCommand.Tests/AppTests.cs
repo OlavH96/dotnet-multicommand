@@ -128,4 +128,35 @@ public class AppTests
 
         Assert.Equal(0, result);
     }
+
+    [Fact]
+    public void App_Execute_WithArgumentContainingSpaces_AddsQuotes()
+    {
+        using var writer = new StringWriter();
+        var console = new AppConsole(writer, writer);
+        var app = new App(console);
+
+        var result = app.Execute("git", "commit", "-m", "my commit message");
+
+        Assert.Equal(0, result);
+        var output = writer.ToString();
+        // Verify the command was constructed with quotes around the message
+        Assert.Contains("\"my commit message\"", output);
+    }
+
+    [Fact]
+    public void App_Execute_WithArgumentWithoutSpaces_NoQuotesAdded()
+    {
+        using var writer = new StringWriter();
+        var console = new AppConsole(writer, writer);
+        var app = new App(console);
+
+        var result = app.Execute("echo", "test");
+
+        Assert.Equal(0, result);
+        var output = writer.ToString();
+        // Verify the command doesn't have unnecessary quotes
+        Assert.Contains("echo test", output);
+        Assert.DoesNotContain("\"test\"", output);
+    }
 }
