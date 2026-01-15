@@ -76,7 +76,7 @@ public class MultiCommandRunner(AppConsole _console)
 		var baseCommand = _settings.Command.Split(' ')[0];
 		var rest = _settings.Command.Substring(baseCommand.Length).Trim();
 		var res = await Cli.Wrap(baseCommand)
-			.WithArguments(rest)
+			.WithArguments(args => args.Add(rest, false)) // false = don't escape, the string is already properly formatted
 			.WithValidation(CommandResultValidation.None) // todo: arg?
 			.WithWorkingDirectory(workingDirectory)
 			.WithStandardOutputPipe(PipeTarget.ToDelegate(s => _console.WriteHighlighted(s)))

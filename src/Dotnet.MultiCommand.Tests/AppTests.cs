@@ -1,5 +1,7 @@
 using System.IO;
 using Dotnet.MultiCommand.Core;
+using CliWrap;
+using CliWrap.Buffered;
 
 namespace Dotnet.MultiCommand.Tests;
 
@@ -158,5 +160,86 @@ public class AppTests
         // Verify the command doesn't have unnecessary quotes
         Assert.Contains("echo test", output);
         Assert.DoesNotContain("\"test\"", output);
+    }
+
+    [Fact]
+    public async Task Integration_PackAndRunActualCommand_WithQuotedArguments()
+    {
+        // Get the project directory
+        var projectDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Dotnet.MultiCommand"));
+        var testDir = Path.Combine(Path.GetTempPath(), $"mc-integration-test-{Guid.NewGuid()}");
+        
+        try
+        {
+            // Create test directory structure
+            Directory.CreateDirectory(testDir);
+            var subDir = Path.Combine(testDir, "testfolder");
+            Directory.CreateDirectory(subDir);
+            File.WriteAllText(Path.Combine(subDir, "test.txt"), "test content");
+
+            // Pack the tool
+            var packResult = await Cli.Wrap("dotnet")
+                .WithArguments(args => args
+                    .Add("pack")
+                    .Add(projectDir)
+                    .Add("-c")
+                    .Add("Release")
+                    .Add("-o")
+                    .Add(Path.Combine(projectDir, "nupkg")))
+                .ExecuteBufferedAsync();
+
+            Assert.Equal(0, packResult.ExitCode);
+
+            // Get the package file
+            var nupkgDir = Path.Combine(projectDir, "nupkg");
+            var nupkgFile = Directory.GetFiles(nupkgDir, "*.nupkg").FirstOrDefault();
+            Assert.NotNull(nupkgFile);
+
+            // Uninstall if already installed
+            await Cli.Wrap("dotnet")
+                .WithArguments(args => args.Add("tool").Add("uninstall").Add("-g").Add("dotnet-multicommand"))
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteBufferedAsync();
+
+            // Install the tool globally
+            var installResult = await Cli.Wrap("dotnet")
+                .WithArguments(args => args
+                    .Add("tool")
+                    .Add("install")
+                    .Add("-g")
+                    .Add("dotnet-multicommand")
+                    .Add("--add-source")
+                    .Add(nupkgDir)
+                    .Add("--version")
+                    .Add("*"))
+                .ExecuteBufferedAsync();
+
+            Assert.Equal(0, installResult.ExitCode);
+
+            // Run the actual command with quoted arguments
+            var result = await Cli.Wrap("mc")
+                .WithArguments(args => args
+                    .Add("echo")
+                    .Add("hello world"))
+                .WithWorkingDirectory(testDir)
+                .ExecuteBufferedAsync();
+
+            Assert.Equal(0, result.ExitCode);
+            Assert.Contains("hello world", result.StandardOutput);
+        }
+        finally
+        {
+            // Cleanup
+            if (Directory.Exists(testDir))
+            {
+                Directory.Delete(testDir, true);
+            }
+
+            // Uninstall the tool
+            await Cli.Wrap("dotnet")
+                .WithArguments(args => args.Add("tool").Add("uninstall").Add("-g").Add("dotnet-multicommand"))
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteBufferedAsync();
+        }
     }
 }
