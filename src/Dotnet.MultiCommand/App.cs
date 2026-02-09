@@ -15,6 +15,7 @@ public class App(AppConsole _console)
 		app.Description = "Dotnet Multi Command Tool (mc)";
 
 		var gitOnly = app.Option("-g | --git", "Only run command in git directories", CommandOptionType.NoValue);
+		var hasChanges = app.Option("-hc | --has-changes", "Only run command in directories with uncommitted git changes", CommandOptionType.NoValue);
 		var recursive = app.Option("-r | --recursive", "Recursively run commands in subdirectories", CommandOptionType.NoValue);
 		var verbose = app.Option("--verbose", "Enable verbose output", CommandOptionType.NoValue);
 		var includeFolderFilter = app.Option<string>("-i | --include-folder <TEXT>", "Only run command in directories containing specified text", CommandOptionType.SingleValue);
@@ -52,6 +53,7 @@ Examples:
 			var worker = new MultiCommandRunner(_console)
 				.WithCommand(commandToRun)
 				.WithGitOnly(gitOnly.HasValue())
+				.WithHasChanges(hasChanges.HasValue())
 				.WithFolderInclusionFilter(includeFolderFilter.HasValue() ? includeFolderFilter.ParsedValue : null)
 				.WithFolderExclusionFilter(excludeFolderFilter.HasValue() ? excludeFolderFilter.ParsedValue : null)
 				.WithFileInclusionFilter(includeFileFilter.HasValue() ? includeFileFilter.ParsedValue : null)

@@ -102,6 +102,7 @@ public class MultiCommandRunnerTests
         var result = runner
             .WithCommand("test")
             .WithGitOnly(true)
+            .WithHasChanges(true)
             .WithRecursive(false)
             .WithFolderInclusionFilter("inc")
             .WithFolderExclusionFilter("exc");
@@ -329,6 +330,187 @@ public class MultiCommandRunnerTests
         finally
         {
             Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void MultiCommandRunner_WithHasChanges_SetsCorrectly()
+    {
+        using var writer = new StringWriter();
+        var console = new AppConsole(writer, writer);
+        var runner = new MultiCommandRunner(console);
+
+        var result = runner.WithHasChanges(true);
+
+        Assert.NotNull(result);
+        Assert.IsType<MultiCommandRunner>(result);
+    }
+
+    [Fact]
+    public async Task MultiCommandRunner_DoCommand_WithHasChanges_SkipsCleanRepo()
+    {
+        using var writer = new StringWriter();
+        var console = new AppConsole(writer, writer) { Verbose = true };
+        var runner = new MultiCommandRunner(console)
+            .WithCommand("dotnet --version")
+            .WithHasChanges(true);
+
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            // Initialize a clean git repo
+            await InitGitRepo(tempDir);
+            
+            var result = await runner.DoCommand(tempDir);
+            Assert.False(result);
+            
+            var output = writer.ToString();
+            Assert.Contains("Skipping directory", output);
+            Assert.Contains("no uncommitted git changes", output);
+        }
+        finally
+        {
+            DeleteDirectoryWithGit(tempDir);
+        }
+    }
+
+    [Fact]
+    public async Task MultiCommandRunner_DoCommand_WithHasChanges_RunsWithTrackedChanges()
+    {
+        using var writer = new StringWriter();
+        var console = new AppConsole(writer, writer);
+        var runner = new MultiCommandRunner(console)
+            .WithCommand("dotnet --version")
+            .WithHasChanges(true);
+
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            // Initialize git repo with a tracked file, then modify it
+            await InitGitRepo(tempDir);
+            var trackedFile = Path.Combine(tempDir, "tracked.txt");
+            File.WriteAllText(trackedFile, "initial");
+            await RunGitCommand(tempDir, "add tracked.txt");
+            await RunGitCommand(tempDir, "commit -m \"initial\"");
+            File.WriteAllText(trackedFile, "modified");
+            
+            var result = await runner.DoCommand(tempDir);
+            Assert.True(result);
+        }
+        finally
+        {
+            DeleteDirectoryWithGit(tempDir);
+        }
+    }
+
+    [Fact]
+    public async Task MultiCommandRunner_DoCommand_WithHasChanges_SkipsRepoWithOnlyUntrackedFiles()
+    {
+        using var writer = new StringWriter();
+        var console = new AppConsole(writer, writer) { Verbose = true };
+        var runner = new MultiCommandRunner(console)
+            .WithCommand("dotnet --version")
+            .WithHasChanges(true);
+
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            // Initialize git repo with initial commit, then add untracked file
+            await InitGitRepo(tempDir);
+            var initialFile = Path.Combine(tempDir, "initial.txt");
+            File.WriteAllText(initialFile, "initial");
+            await RunGitCommand(tempDir, "add initial.txt");
+            await RunGitCommand(tempDir, "commit -m \"initial\"");
+            
+            // Add untracked file
+            var untrackedFile = Path.Combine(tempDir, "untracked.txt");
+            File.WriteAllText(untrackedFile, "untracked content");
+            
+            var result = await runner.DoCommand(tempDir);
+            Assert.False(result);
+            
+            var output = writer.ToString();
+            Assert.Contains("Skipping directory", output);
+        }
+        finally
+        {
+            DeleteDirectoryWithGit(tempDir);
+        }
+    }
+
+    [Fact]
+    public async Task MultiCommandRunner_DoCommand_WithHasChanges_RunsWithStagedChanges()
+    {
+        using var writer = new StringWriter();
+        var console = new AppConsole(writer, writer);
+        var runner = new MultiCommandRunner(console)
+            .WithCommand("dotnet --version")
+            .WithHasChanges(true);
+
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            // Initialize git repo with a staged change
+            await InitGitRepo(tempDir);
+            var initialFile = Path.Combine(tempDir, "initial.txt");
+            File.WriteAllText(initialFile, "initial");
+            await RunGitCommand(tempDir, "add initial.txt");
+            await RunGitCommand(tempDir, "commit -m \"initial\"");
+            
+            var stagedFile = Path.Combine(tempDir, "staged.txt");
+            File.WriteAllText(stagedFile, "staged content");
+            await RunGitCommand(tempDir, "add staged.txt");
+            
+            var result = await runner.DoCommand(tempDir);
+            Assert.True(result);
+        }
+        finally
+        {
+            DeleteDirectoryWithGit(tempDir);
+        }
+    }
+
+    private static async Task InitGitRepo(string directory)
+    {
+        await RunGitCommand(directory, "init");
+        await RunGitCommand(directory, "config user.email \"test@test.com\"");
+        await RunGitCommand(directory, "config user.name \"Test User\"");
+    }
+
+    private static async Task RunGitCommand(string directory, string arguments)
+    {
+        await CliWrap.Cli.Wrap("git")
+            .WithArguments(arguments)
+            .WithWorkingDirectory(directory)
+            .WithValidation(CliWrap.CommandResultValidation.None)
+            .ExecuteAsync();
+    }
+
+    private static void DeleteDirectoryWithGit(string directory)
+    {
+        // On Windows, .git folder files can have read-only attributes
+        // We need to clear them before deleting
+        SetAttributesNormal(new DirectoryInfo(directory));
+        Directory.Delete(directory, true);
+    }
+
+    private static void SetAttributesNormal(DirectoryInfo dir)
+    {
+        foreach (var subDir in dir.GetDirectories())
+        {
+            SetAttributesNormal(subDir);
+        }
+        foreach (var file in dir.GetFiles())
+        {
+            file.Attributes = FileAttributes.Normal;
         }
     }
 }

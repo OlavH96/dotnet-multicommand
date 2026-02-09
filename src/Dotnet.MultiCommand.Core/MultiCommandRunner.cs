@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 using CliWrap;
 namespace Dotnet.MultiCommand.Core;
 
@@ -72,6 +73,15 @@ public class MultiCommandRunner(AppConsole _console)
 				return false;
 			}
 		}
+		if(_settings.HasChanges)
+		{
+			var hasGitChanges = await CheckForGitChanges(workingDirectory);
+			if(!hasGitChanges)
+			{
+				_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it has no uncommitted git changes.");
+				return false;
+			}
+		}
 		_console.WriteNormal($"Executing command: {_settings.Command} in directory: {workingDirectory}");
 		var baseCommand = _settings.Command.Split(' ')[0];
 		var rest = _settings.Command.Substring(baseCommand.Length).Trim();
@@ -96,6 +106,33 @@ public class MultiCommandRunner(AppConsole _console)
 		_settings = _settings with { FolderExclusionFilter = folderExcludesText };
 		return this;
 	}
+	private async Task<bool> CheckForGitChanges(string workingDirectory)
+	{
+		// Check for tracked changes (staged or unstaged, but not untracked files)
+		var statusOutput = new List<string>();
+		var statusResult = await Cli.Wrap("git")
+			.WithArguments("status --porcelain")
+			.WithWorkingDirectory(workingDirectory)
+			.WithValidation(CommandResultValidation.None)
+			.WithStandardOutputPipe(PipeTarget.ToDelegate(s => statusOutput.Add(s)))
+			.ExecuteAsync();
+		
+		bool hasTrackedChanges = statusResult.ExitCode == 0 && 
+			statusOutput.Any(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith("??"));
+
+		// Check for unpushed commits (ahead of remote)
+		var logOutput = new StringBuilder();
+		var logResult = await Cli.Wrap("git")
+			.WithArguments("log @{u}..HEAD --oneline")
+			.WithWorkingDirectory(workingDirectory)
+			.WithValidation(CommandResultValidation.None)
+			.WithStandardOutputPipe(PipeTarget.ToDelegate(s => logOutput.AppendLine(s)))
+			.ExecuteAsync();
+		
+		bool hasUnpushedCommits = logResult.ExitCode == 0 && logOutput.Length > 0;
+
+		return hasTrackedChanges || hasUnpushedCommits;
+	}
 	public MultiCommandRunner WithGitOnly(bool gitOnly)
 	{
 		_settings = _settings with { GitOnly = gitOnly };
@@ -119,6 +156,11 @@ public class MultiCommandRunner(AppConsole _console)
 	public MultiCommandRunner WithFileExclusionFilter(string? fileExcludesText)
 	{
 		_settings = _settings with { FileExclusionFilter = fileExcludesText };
+		return this;
+	}
+	public MultiCommandRunner WithHasChanges(bool hasChanges)
+	{
+		_settings = _settings with { HasChanges = hasChanges };
 		return this;
 	}
 	
