@@ -132,7 +132,7 @@ public class MultiCommandRunnerTests
         var runner = new MultiCommandRunner(console)
             .WithCommand("dotnet --version");
 
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
 
         try
@@ -155,7 +155,7 @@ public class MultiCommandRunnerTests
         var runner = new MultiCommandRunner(console)
             .WithCommand("dotnet --invalid-argument-xyz");
 
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
 
         try
@@ -236,7 +236,7 @@ public class MultiCommandRunnerTests
             .WithCommand("echo test")
             .WithFileInclusionFilter("package.json");
 
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
 
         try
@@ -263,7 +263,7 @@ public class MultiCommandRunnerTests
             .WithCommand("dotnet --version")
             .WithFileInclusionFilter("test");
 
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
         var testFile = Path.Combine(tempDir, "test.txt");
         File.WriteAllText(testFile, "content");
@@ -289,7 +289,7 @@ public class MultiCommandRunnerTests
             .WithCommand("echo test")
             .WithFileExclusionFilter(".lock");
 
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
         var lockFile = Path.Combine(tempDir, "package.lock");
         File.WriteAllText(lockFile, "content");
@@ -319,7 +319,7 @@ public class MultiCommandRunnerTests
             .WithCommand("dotnet --version")
             .WithFileExclusionFilter(".lock");
 
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
 
         try
@@ -355,7 +355,7 @@ public class MultiCommandRunnerTests
             .WithCommand("dotnet --version")
             .WithHasChanges(true);
 
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
 
         try
@@ -386,7 +386,7 @@ public class MultiCommandRunnerTests
             .WithCommand("dotnet --version")
             .WithHasChanges(true);
 
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
 
         try
@@ -419,7 +419,7 @@ public class MultiCommandRunnerTests
             .WithCommand("dotnet --version")
             .WithHasChanges(true);
 
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
 
         try
@@ -457,7 +457,7 @@ public class MultiCommandRunnerTests
             .WithCommand("echo test")
             .WithHasChanges(true);
 
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
 
         try
@@ -518,4 +518,13 @@ public class MultiCommandRunnerTests
             file.Attributes = FileAttributes.Normal;
         }
     }
+	public static string TempPath
+	{
+		get
+		{
+			var val = Environment.GetEnvironmentVariable("RUNNER_TEMP");
+            Console.WriteLine($"TempPath: RUNNER_TEMP={val}");
+            return val ?? Path.GetTempPath();
+		}
+	}
 }

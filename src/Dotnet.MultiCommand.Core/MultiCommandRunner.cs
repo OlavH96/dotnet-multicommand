@@ -134,7 +134,8 @@ public class MultiCommandRunner(AppConsole _console)
 
 		if(statusResult.ExitCode != 0)
 		{
-			throw new Exception($"Failed to check git status in '{workingDirectory}'. Exit code: {statusResult.ExitCode} Output: {string.Join(Environment.NewLine, statusOutput)}");
+			Console.Error.WriteLine($"Error checking git status in '{workingDirectory}'. Exit code: {statusResult.ExitCode} Output: {string.Join(Environment.NewLine, statusOutput)}");
+			return false;
 		}
 
 		// Check for unpushed commits (ahead of remote)
@@ -149,7 +150,8 @@ public class MultiCommandRunner(AppConsole _console)
 
 		if(logResult.ExitCode != 0)
 		{
-			throw new Exception($"Failed to check git log in '{workingDirectory}'. Exit code: {logResult.ExitCode} Output: {logOutput}");
+			Console.Error.WriteLine($"Error checking git log in '{workingDirectory}'. Exit code: {logResult.ExitCode} Output: {logOutput}");
+			return false;
 		}
 		
 		bool hasUnpushedCommits = logResult.ExitCode == 0 && logOutput.Length > 0;
