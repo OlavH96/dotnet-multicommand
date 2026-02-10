@@ -18,10 +18,10 @@ public class App(AppConsole _console)
 		var hasChanges = app.Option("-hc | --has-changes", "Only run command in directories with uncommitted git changes", CommandOptionType.NoValue);
 		var recursive = app.Option("-r | --recursive", "Recursively run commands in subdirectories", CommandOptionType.NoValue);
 		var verbose = app.Option("--verbose", "Enable verbose output", CommandOptionType.NoValue);
-		var includeFolderFilter = app.Option<string>("-i | --include-folder <TEXT>", "Only run command in directories containing specified text", CommandOptionType.SingleValue);
-		var excludeFolderFilter = app.Option<string>("-e | --exclude-folder <TEXT>", "Do not run command in directories containing specified text", CommandOptionType.SingleValue);
-		var includeFileFilter = app.Option<string>("-if | --include-file <TEXT>", "Only run command in directories containing a file with specified text in the filename", CommandOptionType.SingleValue);
-		var excludeFileFilter = app.Option<string>("-ef | --exclude-file <TEXT>", "Do not run command in directories containing a file with specified text in the filename", CommandOptionType.SingleValue);
+		var includeFolderFilter = app.Option<string>("-i | --include-folder <TEXT>", "Only run command in directories containing specified text (can be used multiple times)", CommandOptionType.MultipleValue);
+		var excludeFolderFilter = app.Option<string>("-e | --exclude-folder <TEXT>", "Do not run command in directories containing specified text (can be used multiple times)", CommandOptionType.MultipleValue);
+		var includeFileFilter = app.Option<string>("-if | --include-file <TEXT>", "Only run command in directories containing a file with specified text in the filename (can be used multiple times)", CommandOptionType.MultipleValue);
+		var excludeFileFilter = app.Option<string>("-ef | --exclude-file <TEXT>", "Do not run command in directories containing a file with specified text in the filename (can be used multiple times)", CommandOptionType.MultipleValue);
 
 		var versionOption = app.VersionOption("-v | --version", GetVersion());
 		var helpOption = app.HelpOption("-h | --help");
@@ -35,6 +35,8 @@ Examples:
   - Runs 'git status' in all git repositories recursively
   mc -g -r -i Test -e Example --verbose ls 
   - Runs 'ls' in all git repositories recursively where folder name contains 'Test' but not 'Example' with verbose output
+  mc -i Folder1 -i Folder2 -e node_modules ls
+  - Runs 'ls' in directories containing 'Folder1' OR 'Folder2', but excludes directories containing 'node_modules'
 		";
 
 		app.OnExecuteAsync(async cancellationToken =>
@@ -54,10 +56,10 @@ Examples:
 				.WithCommand(commandToRun)
 				.WithGitOnly(gitOnly.HasValue())
 				.WithHasChanges(hasChanges.HasValue())
-				.WithFolderInclusionFilter(includeFolderFilter.HasValue() ? includeFolderFilter.ParsedValue : null)
-				.WithFolderExclusionFilter(excludeFolderFilter.HasValue() ? excludeFolderFilter.ParsedValue : null)
-				.WithFileInclusionFilter(includeFileFilter.HasValue() ? includeFileFilter.ParsedValue : null)
-				.WithFileExclusionFilter(excludeFileFilter.HasValue() ? excludeFileFilter.ParsedValue : null)
+				.WithFolderInclusionFilter(includeFolderFilter.HasValue() ? includeFolderFilter.Values.Where(v => v != null).Select(v => v!) : null)
+				.WithFolderExclusionFilter(excludeFolderFilter.HasValue() ? excludeFolderFilter.Values.Where(v => v != null).Select(v => v!) : null)
+				.WithFileInclusionFilter(includeFileFilter.HasValue() ? includeFileFilter.Values.Where(v => v != null).Select(v => v!) : null)
+				.WithFileExclusionFilter(excludeFileFilter.HasValue() ? excludeFileFilter.Values.Where(v => v != null).Select(v => v!) : null)
 				.WithRecursive(recursive.HasValue())
 			;
 			await worker.Run();

@@ -4,8 +4,8 @@ public record Settings(
 	bool HasChanges = false,
 	bool Recursive = false,
 	string Command = "ls",
-	string? FolderInclusionFilter = null,
-	string? FolderExclusionFilter = null,
-	string? FileInclusionFilter = null,
-	string? FileExclusionFilter = null
+	IEnumerable<string>? FolderInclusionFilter = null,
+	IEnumerable<string>? FolderExclusionFilter = null,
+	IEnumerable<string>? FileInclusionFilter = null,
+	IEnumerable<string>? FileExclusionFilter = null
 );

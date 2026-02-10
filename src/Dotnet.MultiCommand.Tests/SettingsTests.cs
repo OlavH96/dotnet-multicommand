@@ -51,12 +51,12 @@ public class SettingsTests
         var settings = new Settings();
         var updated = settings with 
         { 
-            FolderInclusionFilter = "Test",
-            FolderExclusionFilter = "Example"
+            FolderInclusionFilter = new[] { "Test" },
+            FolderExclusionFilter = new[] { "Example" }
         };
 
-        Assert.Equal("Test", updated.FolderInclusionFilter);
-        Assert.Equal("Example", updated.FolderExclusionFilter);
+        Assert.Equal(new[] { "Test" }, updated.FolderInclusionFilter);
+        Assert.Equal(new[] { "Example" }, updated.FolderExclusionFilter);
     }
 
     [Fact]
@@ -65,12 +65,12 @@ public class SettingsTests
         var settings = new Settings();
         var updated = settings with 
         { 
-            FileInclusionFilter = "package.json",
-            FileExclusionFilter = ".lock"
+            FileInclusionFilter = new[] { "package.json" },
+            FileExclusionFilter = new[] { ".lock" }
         };
 
-        Assert.Equal("package.json", updated.FileInclusionFilter);
-        Assert.Equal(".lock", updated.FileExclusionFilter);
+        Assert.Equal(new[] { "package.json" }, updated.FileInclusionFilter);
+        Assert.Equal(new[] { ".lock" }, updated.FileExclusionFilter);
     }
 
     [Fact]
@@ -80,10 +80,10 @@ public class SettingsTests
             GitOnly: true,
             Recursive: true,
             Command: "git status",
-            FolderInclusionFilter: "Test",
-            FolderExclusionFilter: "Example",
-            FileInclusionFilter: "package.json",
-            FileExclusionFilter: ".lock"
+            FolderInclusionFilter: new[] { "Test" },
+            FolderExclusionFilter: new[] { "Example" },
+            FileInclusionFilter: new[] { "package.json" },
+            FileExclusionFilter: new[] { ".lock" }
         );
 
         var result = settings.ToString();
@@ -91,9 +91,9 @@ public class SettingsTests
         Assert.Contains("GitOnly", result);
         Assert.Contains("Recursive", result);
         Assert.Contains("git status", result);
-        Assert.Contains("Test", result);
-        Assert.Contains("Example", result);
-        Assert.Contains("package.json", result);
-        Assert.Contains(".lock", result);
+        Assert.Contains("FolderInclusionFilter", result);
+        Assert.Contains("FolderExclusionFilter", result);
+        Assert.Contains("FileInclusionFilter", result);
+        Assert.Contains("FileExclusionFilter", result);
     }
 }

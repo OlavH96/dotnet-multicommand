@@ -56,31 +56,33 @@ public class MultiCommandRunner(AppConsole _console)
 		}
 		string? folderName = new DirectoryInfo(workingDirectory).Name;
 
-		if (_settings.FolderExclusionFilter != null && folderName.Contains(_settings.FolderExclusionFilter))
+		if (_settings.FolderExclusionFilter != null && _settings.FolderExclusionFilter.Any(folderName.Contains))
 		{
-			_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it contains exclusion text '{_settings.FolderExclusionFilter}'.");
+			var matchedFilter = _settings.FolderExclusionFilter.First(folderName.Contains);
+			_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it contains exclusion text '{matchedFilter}'.");
 			return CommandResult.SkippedBecauseFolderExclusionFilter;
 		}
-		if(_settings.FolderInclusionFilter != null && !folderName.Contains(_settings.FolderInclusionFilter))
+		if(_settings.FolderInclusionFilter != null && !_settings.FolderInclusionFilter.Any(filter => folderName.Contains(filter)))
 		{
-			_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it does not contain filter text '{_settings.FolderInclusionFilter}'.");
+			_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it does not contain any inclusion filter text.");
 			return CommandResult.SkippedBecauseFolderInclusionFilter;
 		}
 		if(_settings.FileExclusionFilter != null)
 		{
 			var files = Directory.GetFiles(workingDirectory);
-			if(files.Any(f => Path.GetFileName(f).Contains(_settings.FileExclusionFilter)))
+			if(_settings.FileExclusionFilter.Any(filter => files.Any(f => Path.GetFileName(f).Contains(filter))))
 			{
-				_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it contains a file with exclusion text '{_settings.FileExclusionFilter}'.");
+				var matchedFilter = _settings.FileExclusionFilter.First(filter => files.Any(f => Path.GetFileName(f).Contains(filter)));
+				_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it contains a file with exclusion text '{matchedFilter}'.");
 				return CommandResult.SkippedBecauseFileExclusionFilter;
 			}
 		}
 		if(_settings.FileInclusionFilter != null)
 		{
 			var files = Directory.GetFiles(workingDirectory);
-			if(!files.Any(f => Path.GetFileName(f).Contains(_settings.FileInclusionFilter)))
+			if(!_settings.FileInclusionFilter.Any(filter => files.Any(f => Path.GetFileName(f).Contains(filter))))
 			{
-				_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it does not contain a file with filter text '{_settings.FileInclusionFilter}'.");
+				_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it does not contain a file with any inclusion filter text.");
 				return CommandResult.SkippedBecauseFileInclusionFilter;
 			}
 		}
@@ -107,12 +109,12 @@ public class MultiCommandRunner(AppConsole _console)
 		_stats = _stats with { NumberOfCommandsRan = _stats.NumberOfCommandsRan + 1 };
 		return res.ExitCode == 0 ? CommandResult.Success : CommandResult.Failure;
 	}
-	public MultiCommandRunner WithFolderInclusionFilter(string? folderContainsText)
+	public MultiCommandRunner WithFolderInclusionFilter(IEnumerable<string>? folderContainsText)
 	{
 		_settings = _settings with { FolderInclusionFilter = folderContainsText };
 		return this;
 	}
-	public MultiCommandRunner WithFolderExclusionFilter(string? folderExcludesText)
+	public MultiCommandRunner WithFolderExclusionFilter(IEnumerable<string>? folderExcludesText)
 	{
 		_settings = _settings with { FolderExclusionFilter = folderExcludesText };
 		return this;
@@ -173,12 +175,12 @@ public class MultiCommandRunner(AppConsole _console)
 		_settings = _settings with { Command = command };
 		return this;
 	}
-	public MultiCommandRunner WithFileInclusionFilter(string? fileContainsText)
+	public MultiCommandRunner WithFileInclusionFilter(IEnumerable<string>? fileContainsText)
 	{
 		_settings = _settings with { FileInclusionFilter = fileContainsText };
 		return this;
 	}
-	public MultiCommandRunner WithFileExclusionFilter(string? fileExcludesText)
+	public MultiCommandRunner WithFileExclusionFilter(IEnumerable<string>? fileExcludesText)
 	{
 		_settings = _settings with { FileExclusionFilter = fileExcludesText };
 		return this;

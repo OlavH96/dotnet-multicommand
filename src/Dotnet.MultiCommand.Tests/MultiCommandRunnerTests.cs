@@ -51,7 +51,7 @@ public class MultiCommandRunnerTests
         var console = new AppConsole(writer, writer);
         var runner = new MultiCommandRunner(console);
 
-        var result = runner.WithFolderInclusionFilter("Test");
+        var result = runner.WithFolderInclusionFilter(new[] { "Test" });
 
         Assert.NotNull(result);
     }
@@ -63,7 +63,7 @@ public class MultiCommandRunnerTests
         var console = new AppConsole(writer, writer);
         var runner = new MultiCommandRunner(console);
 
-        var result = runner.WithFolderExclusionFilter("Example");
+        var result = runner.WithFolderExclusionFilter(new[] { "Example" });
 
         Assert.NotNull(result);
     }
@@ -75,7 +75,7 @@ public class MultiCommandRunnerTests
         var console = new AppConsole(writer, writer);
         var runner = new MultiCommandRunner(console);
 
-        var result = runner.WithFileInclusionFilter("package.json");
+        var result = runner.WithFileInclusionFilter(new[] { "package.json" });
 
         Assert.NotNull(result);
     }
@@ -87,7 +87,7 @@ public class MultiCommandRunnerTests
         var console = new AppConsole(writer, writer);
         var runner = new MultiCommandRunner(console);
 
-        var result = runner.WithFileExclusionFilter(".lock");
+        var result = runner.WithFileExclusionFilter(new[] { ".lock" });
 
         Assert.NotNull(result);
     }
@@ -104,8 +104,8 @@ public class MultiCommandRunnerTests
             .WithGitOnly(true)
             .WithHasChanges(true)
             .WithRecursive(false)
-            .WithFolderInclusionFilter("inc")
-            .WithFolderExclusionFilter("exc");
+            .WithFolderInclusionFilter(new[] { "inc" })
+            .WithFolderExclusionFilter(new[] { "exc" });
 
         Assert.NotNull(result);
         Assert.IsType<MultiCommandRunner>(result);
@@ -180,7 +180,7 @@ public class MultiCommandRunnerTests
         var console = new AppConsole(writer, writer) { Verbose = true };
         var runner = new MultiCommandRunner(console)
             .WithCommand("echo test")
-            .WithFolderExclusionFilter("Example");
+            .WithFolderExclusionFilter(new[] { "Example" });
 
         var tempDir = Path.Combine(Path.GetTempPath(), "Example_" + Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
@@ -207,7 +207,7 @@ public class MultiCommandRunnerTests
         var console = new AppConsole(writer, writer) { Verbose = true };
         var runner = new MultiCommandRunner(console)
             .WithCommand("echo test")
-            .WithFolderInclusionFilter("Test");
+            .WithFolderInclusionFilter(new[] { "Test" });
 
         var tempDir = Path.Combine(Path.GetTempPath(), "Other_" + Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
@@ -219,7 +219,7 @@ public class MultiCommandRunnerTests
             
             var output = writer.ToString();
             Assert.Contains("Skipping directory", output);
-            Assert.Contains("does not contain filter text", output);
+            Assert.Contains("does not contain any inclusion filter text", output);
         }
         finally
         {
@@ -234,7 +234,7 @@ public class MultiCommandRunnerTests
         var console = new AppConsole(writer, writer) { Verbose = true };
         var runner = new MultiCommandRunner(console)
             .WithCommand("echo test")
-            .WithFileInclusionFilter("package.json");
+            .WithFileInclusionFilter(new[] { "package.json" });
 
         var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
@@ -246,7 +246,7 @@ public class MultiCommandRunnerTests
             
             var output = writer.ToString();
             Assert.Contains("Skipping directory", output);
-            Assert.Contains("does not contain a file with filter text", output);
+            Assert.Contains("does not contain a file with any inclusion filter text", output);
         }
         finally
         {
@@ -261,7 +261,7 @@ public class MultiCommandRunnerTests
         var console = new AppConsole(writer, writer);
         var runner = new MultiCommandRunner(console)
             .WithCommand("dotnet --version")
-            .WithFileInclusionFilter("test");
+            .WithFileInclusionFilter(new[] { "test" });
 
         var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
@@ -287,7 +287,7 @@ public class MultiCommandRunnerTests
         var console = new AppConsole(writer, writer) { Verbose = true };
         var runner = new MultiCommandRunner(console)
             .WithCommand("echo test")
-            .WithFileExclusionFilter(".lock");
+            .WithFileExclusionFilter(new[] { ".lock" });
 
         var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
@@ -317,7 +317,7 @@ public class MultiCommandRunnerTests
         var console = new AppConsole(writer, writer);
         var runner = new MultiCommandRunner(console)
             .WithCommand("dotnet --version")
-            .WithFileExclusionFilter(".lock");
+            .WithFileExclusionFilter(new[] { ".lock" });
 
         var tempDir = Path.Combine(TempPath, Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
@@ -330,6 +330,86 @@ public class MultiCommandRunnerTests
         finally
         {
             Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task MultiCommandRunner_DoCommand_WithMultipleFolderInclusionFilters_MatchesAny()
+    {
+        using var writer = new StringWriter();
+        var console = new AppConsole(writer, writer);
+        var runner = new MultiCommandRunner(console)
+            .WithCommand("dotnet --version")
+            .WithFolderInclusionFilter(new[] { "Alpha", "Beta" });
+
+        // Directory contains "Alpha" - should match
+        var tempDir1 = Path.Combine(Path.GetTempPath(), "Alpha_" + Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir1);
+
+        // Directory contains "Beta" - should match
+        var tempDir2 = Path.Combine(Path.GetTempPath(), "Beta_" + Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir2);
+
+        // Directory contains neither - should not match
+        var tempDir3 = Path.Combine(Path.GetTempPath(), "Gamma_" + Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir3);
+
+        try
+        {
+            var result1 = await runner.DoCommand(tempDir1);
+            Assert.Equal(CommandResult.Success, result1);
+
+            var result2 = await runner.DoCommand(tempDir2);
+            Assert.Equal(CommandResult.Success, result2);
+
+            var result3 = await runner.DoCommand(tempDir3);
+            Assert.Equal(CommandResult.SkippedBecauseFolderInclusionFilter, result3);
+        }
+        finally
+        {
+            Directory.Delete(tempDir1, true);
+            Directory.Delete(tempDir2, true);
+            Directory.Delete(tempDir3, true);
+        }
+    }
+
+    [Fact]
+    public async Task MultiCommandRunner_DoCommand_WithMultipleFolderExclusionFilters_SkipsAny()
+    {
+        using var writer = new StringWriter();
+        var console = new AppConsole(writer, writer);
+        var runner = new MultiCommandRunner(console)
+            .WithCommand("dotnet --version")
+            .WithFolderExclusionFilter(new[] { "node_modules", "bin" });
+
+        // Directory contains "node_modules" - should be skipped
+        var tempDir1 = Path.Combine(Path.GetTempPath(), "node_modules_" + Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir1);
+
+        // Directory contains "bin" - should be skipped
+        var tempDir2 = Path.Combine(Path.GetTempPath(), "bin_" + Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir2);
+
+        // Directory contains neither - should run
+        var tempDir3 = Path.Combine(Path.GetTempPath(), "src_" + Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir3);
+
+        try
+        {
+            var result1 = await runner.DoCommand(tempDir1);
+            Assert.Equal(CommandResult.SkippedBecauseFolderExclusionFilter, result1);
+
+            var result2 = await runner.DoCommand(tempDir2);
+            Assert.Equal(CommandResult.SkippedBecauseFolderExclusionFilter, result2);
+
+            var result3 = await runner.DoCommand(tempDir3);
+            Assert.Equal(CommandResult.Success, result3);
+        }
+        finally
+        {
+            Directory.Delete(tempDir1, true);
+            Directory.Delete(tempDir2, true);
+            Directory.Delete(tempDir3, true);
         }
     }
 
