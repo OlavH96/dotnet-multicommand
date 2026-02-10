@@ -126,6 +126,7 @@ public class MultiCommandRunner(AppConsole _console)
 			.WithWorkingDirectory(workingDirectory)
 			.WithValidation(CommandResultValidation.None)
 			.WithStandardOutputPipe(PipeTarget.ToDelegate(s => statusOutput.Add(s)))
+			.WithStandardErrorPipe(PipeTarget.ToDelegate(s => statusOutput.Add(s)))
 			.ExecuteAsync();
 		
 		bool hasTrackedChanges = statusResult.ExitCode == 0 && 
@@ -143,6 +144,7 @@ public class MultiCommandRunner(AppConsole _console)
 			.WithWorkingDirectory(workingDirectory)
 			.WithValidation(CommandResultValidation.None)
 			.WithStandardOutputPipe(PipeTarget.ToDelegate(s => logOutput.AppendLine(s)))
+			.WithStandardErrorPipe(PipeTarget.ToDelegate(s => logOutput.AppendLine(s)))
 			.ExecuteAsync();
 
 		if(logResult.ExitCode != 0)
