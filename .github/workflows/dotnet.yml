@@ -20,6 +20,9 @@ jobs:
       - name: Install dotnet-script
         run: dotnet tool install dotnet-script --tool-path dotnet-script-tool
 
+      - name: Install git
+        run: sudo apt-get install git
+      
       - name: Run build script
         run: dotnet-script-tool/dotnet-script --disable-isolated-load-context build/build.csx
 
