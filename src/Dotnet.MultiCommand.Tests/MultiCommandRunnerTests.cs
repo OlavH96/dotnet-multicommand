@@ -138,7 +138,7 @@ public class MultiCommandRunnerTests
         try
         {
             var result = await runner.DoCommand(tempDir);
-            Assert.True(result);
+            Assert.Equal(CommandResult.Success, result);
         }
         finally
         {
@@ -162,7 +162,7 @@ public class MultiCommandRunnerTests
         {
             var result = await runner.DoCommand(tempDir);
             // Command will fail but we should capture the error output
-            Assert.False(result);
+            Assert.Equal(CommandResult.Failure, result);
             var output = writer.ToString();
             // Should contain error message in the output
             Assert.NotEmpty(output);
@@ -188,7 +188,7 @@ public class MultiCommandRunnerTests
         try
         {
             var result = await runner.DoCommand(tempDir);
-            Assert.False(result);
+            Assert.Equal(CommandResult.SkippedBecauseFolderExclusionFilter, result);
             
             var output = writer.ToString();
             Assert.Contains("Skipping directory", output);
@@ -215,7 +215,7 @@ public class MultiCommandRunnerTests
         try
         {
             var result = await runner.DoCommand(tempDir);
-            Assert.False(result);
+            Assert.Equal(CommandResult.SkippedBecauseFolderInclusionFilter, result);
             
             var output = writer.ToString();
             Assert.Contains("Skipping directory", output);
@@ -242,7 +242,7 @@ public class MultiCommandRunnerTests
         try
         {
             var result = await runner.DoCommand(tempDir);
-            Assert.False(result);
+            Assert.Equal(CommandResult.SkippedBecauseFileInclusionFilter, result);
             
             var output = writer.ToString();
             Assert.Contains("Skipping directory", output);
@@ -271,7 +271,7 @@ public class MultiCommandRunnerTests
         try
         {
             var result = await runner.DoCommand(tempDir);
-            Assert.True(result);
+            Assert.Equal(CommandResult.Success, result);
         }
         finally
         {
@@ -297,7 +297,7 @@ public class MultiCommandRunnerTests
         try
         {
             var result = await runner.DoCommand(tempDir);
-            Assert.False(result);
+            Assert.Equal(CommandResult.SkippedBecauseFileExclusionFilter, result);
             
             var output = writer.ToString();
             Assert.Contains("Skipping directory", output);
@@ -325,7 +325,7 @@ public class MultiCommandRunnerTests
         try
         {
             var result = await runner.DoCommand(tempDir);
-            Assert.True(result);
+            Assert.Equal(CommandResult.Success, result);
         }
         finally
         {
@@ -364,7 +364,7 @@ public class MultiCommandRunnerTests
             await InitGitRepo(tempDir);
             
             var result = await runner.DoCommand(tempDir);
-            Assert.False(result);
+            Assert.Equal(CommandResult.SkippedBecauseNoGitChanges, result);
             
             var output = writer.ToString();
             Assert.Contains("Skipping directory", output);
@@ -372,6 +372,7 @@ public class MultiCommandRunnerTests
         }
         finally
         {
+            Console.WriteLine(nameof(MultiCommandRunner_DoCommand_WithHasChanges_SkipsCleanRepo) + ": " + writer.ToString());
             DeleteDirectoryWithGit(tempDir);
         }
     }
@@ -399,10 +400,12 @@ public class MultiCommandRunnerTests
             File.WriteAllText(trackedFile, "modified");
             
             var result = await runner.DoCommand(tempDir);
-            Assert.True(result);
-        }
+			var output = writer.ToString();
+            Assert.Equal(CommandResult.Success, result);
+            Assert.Contains("Executing command", output);}
         finally
         {
+            Console.WriteLine(nameof(MultiCommandRunner_DoCommand_WithHasChanges_RunsWithTrackedChanges) + " " + writer.ToString());
             DeleteDirectoryWithGit(tempDir);
         }
     }
@@ -433,13 +436,14 @@ public class MultiCommandRunnerTests
             File.WriteAllText(untrackedFile, "untracked content");
             
             var result = await runner.DoCommand(tempDir);
-            Assert.False(result);
+            Assert.Equal(CommandResult.SkippedBecauseNoGitChanges, result);
             
             var output = writer.ToString();
             Assert.Contains("Skipping directory", output);
         }
         finally
         {
+            Console.WriteLine(nameof(MultiCommandRunner_DoCommand_WithHasChanges_SkipsRepoWithOnlyUntrackedFiles) + " " + writer.ToString());
             DeleteDirectoryWithGit(tempDir);
         }
     }
@@ -450,7 +454,7 @@ public class MultiCommandRunnerTests
         using var writer = new StringWriter();
         var console = new AppConsole(writer, writer);
         var runner = new MultiCommandRunner(console)
-            .WithCommand("dotnet --version")
+            .WithCommand("echo test")
             .WithHasChanges(true);
 
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -470,10 +474,11 @@ public class MultiCommandRunnerTests
             await RunGitCommand(tempDir, "add staged.txt");
             
             var result = await runner.DoCommand(tempDir);
-            Assert.True(result);
+            Assert.Equal(CommandResult.Success, result);
         }
         finally
         {
+            Console.WriteLine(nameof(MultiCommandRunner_DoCommand_WithHasChanges_RunsWithStagedChanges) + " " + writer.ToString());
             DeleteDirectoryWithGit(tempDir);
         }
     }

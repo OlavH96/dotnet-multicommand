@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="src/Dotnet.MultiCommand/Dotnet.MultiCommand.csproj" />
+  <Project Path="src/Dotnet.MultiCommand.Core/Dotnet.MultiCommand.Core.csproj" />
+  <Project Path="src/Dotnet.MultiCommand.Tests/Dotnet.MultiCommand.Tests.csproj" />
 </Solution>

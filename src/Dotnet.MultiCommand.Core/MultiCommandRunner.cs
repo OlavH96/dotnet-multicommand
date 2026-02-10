@@ -3,6 +3,17 @@ using System.Text;
 using CliWrap;
 namespace Dotnet.MultiCommand.Core;
 
+public enum CommandResult
+{
+	Success,
+	Failure,
+	SkippedBecauseGitOnly,
+	SkippedBecauseFolderExclusionFilter,
+	SkippedBecauseFolderInclusionFilter,
+	SkippedBecauseFileExclusionFilter,
+	SkippedBecauseFileInclusionFilter,
+	SkippedBecauseNoGitChanges
+}
 public class MultiCommandRunner(AppConsole _console)
 {
 	private Settings _settings = new Settings();
@@ -30,30 +41,30 @@ public class MultiCommandRunner(AppConsole _console)
 				var subDirs = Directory.GetDirectories(dir);
 				await RunInDirectories(subDirs);
 			}
-			if(_settings.GitOnly && !Directory.Exists(Path.Combine(dir, ".git")))
-			{
-				_console.WriteVerbose($"Skipping non-git directory: {dir}");
-				continue;
-			}
 
 			await DoCommand(dir);
 		}
 		return true;
 	}
 
-	public async Task<bool> DoCommand(string workingDirectory)
+	public async Task<CommandResult> DoCommand(string workingDirectory)
 	{
+		if(_settings.GitOnly && !Directory.Exists(Path.Combine(workingDirectory, ".git")))
+		{
+			_console.WriteVerbose($"Skipping non-git directory: {workingDirectory}");
+			return CommandResult.SkippedBecauseGitOnly;
+		}
 		string? folderName = new DirectoryInfo(workingDirectory).Name;
 
 		if (_settings.FolderExclusionFilter != null && folderName.Contains(_settings.FolderExclusionFilter))
 		{
 			_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it contains exclusion text '{_settings.FolderExclusionFilter}'.");
-			return false;
+			return CommandResult.SkippedBecauseFolderExclusionFilter;
 		}
 		if(_settings.FolderInclusionFilter != null && !folderName.Contains(_settings.FolderInclusionFilter))
 		{
 			_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it does not contain filter text '{_settings.FolderInclusionFilter}'.");
-			return false;
+			return CommandResult.SkippedBecauseFolderInclusionFilter;
 		}
 		if(_settings.FileExclusionFilter != null)
 		{
@@ -61,7 +72,7 @@ public class MultiCommandRunner(AppConsole _console)
 			if(files.Any(f => Path.GetFileName(f).Contains(_settings.FileExclusionFilter)))
 			{
 				_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it contains a file with exclusion text '{_settings.FileExclusionFilter}'.");
-				return false;
+				return CommandResult.SkippedBecauseFileExclusionFilter;
 			}
 		}
 		if(_settings.FileInclusionFilter != null)
@@ -70,7 +81,7 @@ public class MultiCommandRunner(AppConsole _console)
 			if(!files.Any(f => Path.GetFileName(f).Contains(_settings.FileInclusionFilter)))
 			{
 				_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it does not contain a file with filter text '{_settings.FileInclusionFilter}'.");
-				return false;
+				return CommandResult.SkippedBecauseFileInclusionFilter;
 			}
 		}
 		if(_settings.HasChanges)
@@ -79,7 +90,7 @@ public class MultiCommandRunner(AppConsole _console)
 			if(!hasGitChanges)
 			{
 				_console.WriteVerbose($"Skipping directory '{workingDirectory}' as it has no uncommitted git changes.");
-				return false;
+				return CommandResult.SkippedBecauseNoGitChanges;
 			}
 		}
 		_console.WriteNormal($"Executing command: {_settings.Command} in directory: {workingDirectory}");
@@ -94,7 +105,7 @@ public class MultiCommandRunner(AppConsole _console)
 			.ExecuteAsync();
 		_console.WriteEmptyLine();
 		_stats = _stats with { NumberOfCommandsRan = _stats.NumberOfCommandsRan + 1 };
-		return res.ExitCode == 0;
+		return res.ExitCode == 0 ? CommandResult.Success : CommandResult.Failure;
 	}
 	public MultiCommandRunner WithFolderInclusionFilter(string? folderContainsText)
 	{
